@@ -1,6 +1,6 @@
 # zero-shot-crime-detection
-
 Code and data for the paper _Garbage in, garbage out: Zero-shot detection of crime using Large Language Models_
+This fork is for experimental purposes, specifically for prompt engineering testing. 
 
 # Dataset
 
