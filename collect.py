@@ -35,6 +35,7 @@ def gpt(prompt, model="gpt-4"):
         return response
     
     retries = 0
+    reconnect = 0
     while not response:
         try:
             response = openai.ChatCompletion.create(
@@ -54,6 +55,13 @@ def gpt(prompt, model="gpt-4"):
         except openai.error.InvalidRequestError as e:
             # unable to respond (e.g. token limit)
             return None
+        except openai.error.Timeout as e:
+            if reconnect < 6:
+                print(f"Timed out, retries={reconnect}\n", e)
+                reconnect += 1
+                time.sleep(2 ** reconnect) # 1, 2, 4, 8, 16, 32, 64, 128 sec.
+                continue
+            raise 
     
     put_cache(prompt, response, f"cache-{model}.json")
     return response
@@ -86,7 +94,7 @@ with open("gpt_responses.log", "w") as log_file:
 {manual_description}
 
 TASK:
-List out the most feasible explanations and categorise them as one of [Abuse: This event contains videos which show bad, cruel or violent behavior against children, old people, animals, and women.Burglary: This event contains videos that show people (thieves) entering into a building or house with the intention to commit theft. It does not include use of force against people.Robbery: This event contains videos showing thieves taking money unlawfully by force or threat of force. These videos do not include shootings.Stealing: This event contains videos showing people taking property or money without permission. They do not include shoplifting.Shooting: This event contains videos showing act of shooting someone with a gun.Shoplifting: This event contains videos showing people stealing goods from a shop while posing as a shopper.Assault: This event contains videos showing a sudden or violent physical attack on someone. Note that in these videos the person who is assaulted does not fight back.Fighting: This event contains videos displaying two are more people attacking one another.Arson: This event contains videos showing people deliberately setting fire to property.Explosion: This event contains videos showing destructive event of something blowing apart. This event does not include videos where a person intentionally sets a fire or sets off an explosion.Arrest: This event contains videos showing police arresting individuals.Road Accident: This event contains videos showing traffic accidents involving vehicles, pedestrians or cyclists.Vandalism: This event contains videos showing action involving deliberate destruction of or damage to public or private property. The term includes property damage, such as graffiti and defacement directed towards any property without permission of the owner.Normal Event: This event contains videos where no crime occurred. These videos include both indoor (such as a shopping mall) and outdoor scenes as well as day and night-time scenes.]. Finally, output one line containing a single category in quotes. Do not include anything other than the category on the final line. Let's think step by step"""
+This is a high crime area, list possible explanations and categorise as one of [Abuse: This event contains videos which show bad, cruel or violent behavior against children, old people, animals, and women.Burglary: This event contains videos that show people (thieves) entering into a building or house with the intention to commit theft. It does not include use of force against people.Robbery: This event contains videos showing thieves taking money unlawfully by force or threat of force. These videos do not include shootings.Stealing: This event contains videos showing people taking property or money without permission. They do not include shoplifting.Shooting: This event contains videos showing act of shooting someone with a gun.Shoplifting: This event contains videos showing people stealing goods from a shop while posing as a shopper.Assault: This event contains videos showing a sudden or violent physical attack on someone. Note that in these videos the person who is assaulted does not fight back.Fighting: This event contains videos displaying two are more people attacking one another.Arson: This event contains videos showing people deliberately setting fire to property.Explosion: This event contains videos showing destructive event of something blowing apart. This event does not include videos where a person intentionally sets a fire or sets off an explosion.Arrest: This event contains videos showing police arresting individuals.Road Accident: This event contains videos showing traffic accidents involving vehicles, pedestrians or cyclists.Vandalism: This event contains videos showing action involving deliberate destruction of or damage to public or private property. The term includes property damage, such as graffiti and defacement directed towards any property without permission of the owner.Normal: This event contains videos where no crime occurred. These videos include both indoor (such as a shopping mall) and outdoor scenes as well as day and night-time scenes.] based on the given descriptions, and identify the most likely one. Finally, output one line containing a single category in quotes. Do not include anything other than the category on the final line. Let's think step by step"""
 # Make changes to this prompt to see is crime classification accuracy improves.
             # Call the OpenAI API with the formatted prompt
             #response = openai.Completion.create(engine="text-chatgpt-002", prompt=prompt, max_tokens=100, n=1, stop=None, temperature=0.7)
